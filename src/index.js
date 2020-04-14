@@ -196,6 +196,7 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
     videoElement.muted = true
     videoElement.srcObject = mediaStream
     videoElement.setAttribute('style', 'position:fixed; left: 0px; top:0px; pointer-events: none; opacity:0;')
+    videoElement.setAttribute('id', 'vsm' + mediaStream.id)
     document.body.appendChild(videoElement)
 
     if (!stream.mute) {
@@ -234,6 +235,11 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
       if (self._streams[i].audioOutput) {
         self._streams[i].audioOutput.disconnect(self._audioDestination)
         self._streams[i].audioOutput = null
+      }
+
+      var videoElement = document.getElementById('vsm' + mediaStream.id);
+      if (videoElement) {
+        videoElement.remove();
       }
 
       self._streams[i] = null

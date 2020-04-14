@@ -1,0 +1,85 @@
+<html lang="en">
+<head>
+    <title>Files Demo</title>
+</head>
+<body>
+<h1>video-stream-merger demo</h1>
+
+<p>Merge and manipulate existing media.</p>
+
+<p>The below demo merges two Webcam Strams and an MP4 files together. Then deletes the first stream.</p>
+
+<br><br>
+
+<button>Click to Start</button>
+<br>
+<video controls id="output"></video>
+
+<script src="./../dist/video-stream-merger.js"></script>
+<script src="getusermedia.js"></script>
+
+<script>
+    // we need to "warm up" the AudioContext with a user event
+    document.querySelector('button').addEventListener('click', function () {
+        var merger = new VideoStreamMerger()
+
+        var mp4Element = document.createElement('video')
+        mp4Element.muted = true
+        mp4Element.src = "sample.mp4"
+        mp4Element.autoplay = true
+        mp4Element.loop = true
+
+        var toRemoveId = null;
+        var count = 100
+
+        merger.addMediaElement('mp4', mp4Element, {
+            mute: true,
+            draw: function (ctx, frame, done) {
+                count++
+                ctx.drawImage(frame, merger.width / 2 - count / 2, merger.height / 2 - count / 2, count, count)
+                done()
+            }
+        })
+
+        navigator.mediaDevices.getUserMedia({video: true, audio: true})
+            .then(function (stream) {
+                toRemoveId = stream.id
+                merger.addStream(stream, {
+                    x: 0,
+                    y: merger.height - 100,
+                    width: 100,
+                    height: 100,
+                    mute: false
+                })
+            })
+            .catch(function (err) {
+                console.log(err);
+            })
+
+        navigator.mediaDevices.getUserMedia({video: true, audio: true})
+            .then(function (stream) {
+                merger.addStream(stream, {
+                    x: merger.width - 100,
+                    y: 0,
+                    width: 100,
+                    height: 100,
+                    mute: false
+                })
+            })
+            .catch(function (err) {
+                console.log(err);
+            })
+
+        merger.start()
+
+        var outputElement = document.querySelector('#output')
+        outputElement.srcObject = merger.result
+        outputElement.autoplay = true
+
+        setTimeout(function () {
+            merger.removeStream(toRemoveId)
+        }, 10000);
+    })
+</script>
+</body>
+</html>
